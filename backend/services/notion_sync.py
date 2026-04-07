@@ -83,13 +83,13 @@ class NotionSync:
         """Sync a single Notion item to wiki. Returns True if created, False if updated"""
         properties = item.get("properties", {})
 
-        # Extract properties (field mapping configurable in wiki_schema.yaml)
-        title = self._extract_property(properties, "Name", "title")
+        # Extract properties (field mapping - supports both English and French property names)
+        title = self._extract_property(properties, "Nom", "title") or self._extract_property(properties, "Name", "title")
         description = self._extract_property(properties, "Description", "rich_text")
-        category = self._extract_property(properties, "Category", "select")
+        category = self._extract_property(properties, "tag", "multi_select") or self._extract_property(properties, "Category", "select")
         url = self._extract_property(properties, "URL", "url")
-        date_discovered = self._extract_property(properties, "Date Discovered", "date")
-        status = self._extract_property(properties, "Status", "select")
+        date_discovered = self._extract_property(properties, "Date", "date") or self._extract_property(properties, "Date Discovered", "date")
+        status = self._extract_property(properties, "État", "select") or self._extract_property(properties, "Status", "select")
 
         if not title:
             logger.warning(f"Skipping Notion item without title: {item}")
@@ -172,6 +172,9 @@ Synced from Notion database"""
         elif prop_type == "select":
             select = prop.get("select", {})
             return select.get("name") if select else None
+        elif prop_type == "multi_select":
+            items = prop.get("multi_select", [])
+            return items[0].get("name") if items else None
         elif prop_type == "url":
             return prop.get("url")
         elif prop_type == "date":
