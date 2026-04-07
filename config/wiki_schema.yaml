@@ -1,0 +1,99 @@
+# Wiki Schema Configuration - Karpathy's No-Vector RAG System
+# This defines the structure, conventions, and workflows for the knowledge base
+
+wiki:
+  name: "Personal Knowledge Base"
+  description: "LLM-maintained wiki using no-vector RAG approach"
+  version: "1.0"
+
+structure:
+  # Top-level directories in the vault
+  directories:
+    entities:
+      description: "Entity pages - people, concepts, technologies"
+      naming: "kebab-case"
+      template: "entity-template.md"
+
+    topics:
+      description: "Topic hubs with interconnected information"
+      naming: "kebab-case"
+      template: "topic-template.md"
+
+    sources:
+      description: "Imported content from raw sources"
+      naming: "kebab-case"
+      template: "source-template.md"
+
+    technology_watch:
+      description: "Technology watch items from Notion"
+      naming: "kebab-case"
+      template: "tech-watch-template.md"
+
+    decisions:
+      description: "Decisions and rationales"
+      naming: "kebab-case"
+      template: "decision-template.md"
+
+ingestion:
+  process: "ingest"
+  description: "When adding a new source, the LLM should:"
+  steps:
+    - "Read and understand the entire source material"
+    - "Extract key concepts and create/update entity pages"
+    - "Create topic hub or update existing ones"
+    - "Add cross-references between related pages"
+    - "Flag contradictions with existing knowledge"
+    - "Update source index"
+
+  deduplication: true
+  staleness_tracking: true
+  max_pages_per_ingest: 15
+
+querying:
+  process: "query"
+  description: "When answering a question:"
+  steps:
+    - "Synthesize information from wiki pages"
+    - "Follow cross-references for complete context"
+    - "Mention sources and entities in the response"
+
+  search_strategy: "bfs"  # breadth-first search through wiki links
+
+maintenance:
+  process: "lint"
+  description: "Regular health checks:"
+  checks:
+    - "Detect orphaned pages"
+    - "Find missing cross-references"
+    - "Identify contradictions"
+    - "Track stale information"
+    - "Check for broken links"
+
+  frequency: "weekly"
+
+metadata:
+  required_fields:
+    - "title"
+    - "created_date"
+    - "last_updated"
+    - "tags"
+
+  optional_fields:
+    - "source"
+    - "related_entities"
+    - "status"  # draft, published, stale
+    - "confidence_level"  # high, medium, low
+
+integration:
+  notion:
+    enabled: true
+    sync_interval: "6h"
+    database_mapping:
+      technology_watch: "Technology Watch Items"
+    fields:
+      title: "Name"
+      description: "Description"
+      category: "Category"
+      url: "URL"
+      date_discovered: "Date Discovered"
+      status: "Status"

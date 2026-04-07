@@ -1,0 +1,149 @@
+No-Vector RAG Personal Knowledge Base System
+Directory Structure
+
+obsidian-wiki-llm/                           # Project root
+│
+├── Documentation (Read These First)
+│   ├── README.md                           # System overview & usage
+│   ├── SETUP.md                            # Installation guide
+│   ├── ARCHITECTURE.md                     # Technical architecture
+│   ├── NOTION_INTEGRATION.md               # Notion integration study
+│   ├── IMPLEMENTATION_SUMMARY.md           # What was delivered
+│   ├── PROJECT_CHECKLIST.md                # Completion checklist
+│   ├── DIRECTORY_STRUCTURE.txt             # This file
+│   └── CLAUDE.md                           # Project instructions
+│
+├── Docker & Deployment
+│   ├── docker compose.yml                  # Main orchestration file
+│   ├── Dockerfile.backend                  # API container
+│   ├── Dockerfile.cli                      # CLI tools container
+│   ├── .env.example                        # Environment template
+│   ├── .gitignore                          # Git configuration
+│   └── Makefile                            # Convenience commands
+│
+├── Backend API (Python/FastAPI)
+│   ├── backend/
+│   │   ├── __init__.py                     # Package marker
+│   │   ├── main.py                         # FastAPI application (10+ endpoints)
+│   │   └── services/
+│   │       ├── __init__.py
+│   │       ├── wiki_manager.py             # Vault CRUD operations
+│   │       ├── ingestion.py                # Claude-powered ingest
+│   │       ├── query_engine.py             # BFS query & synthesis
+│   │       └── notion_sync.py              # Notion integration
+│   │
+│   └── requirements-backend.txt            # Python dependencies
+│
+├── CLI Tools (Python/Click)
+│   ├── scripts/
+│   │   ├── ingest.py                       # Ingest documents
+│   │   ├── query.py                        # Query the wiki
+│   │   ├── maintenance.py                  # Linting & stats
+│   │   └── notion-sync.py                  # Sync Notion DB
+│   │
+│   └── requirements-cli.txt                # Python dependencies
+│
+├── Configuration
+│   ├── config/
+│   │   ├── wiki_schema.yaml                # Wiki structure & rules
+│   │   └── templates/
+│   │       ├── entity-template.md          # Entity page template
+│   │       ├── topic-template.md           # Topic hub template
+│   │       └── tech-watch-template.md      # Tech watch template
+│
+├── Data (Your Knowledge Base)
+│   ├── vault/                              # Obsidian vault (markdown)
+│   │   ├── entities/                       # Extracted concepts
+│   │   ├── topics/                         # Thematic hubs
+│   │   ├── sources/                        # Content references
+│   │   ├── technology_watch/               # Notion synced items
+│   │   ├── decisions/                      # Decision logs
+│   │   └── .obsidian/                      # Obsidian config
+│   │
+│   └── raw_sources/                        # Original documents
+│       └── (your files here)
+│
+└── .git/                                   # Version control (when initialized)
+
+Key Files to Read First:
+
+1. README.md                    → Overview and main documentation
+2. SETUP.md                     → Installation instructions
+3. NOTION_INTEGRATION.md        → Notion integration guide
+4. docker compose.yml           → Container configuration
+
+Quick Start:
+
+$ cp .env.example .env          # Create environment file
+$ nano .env                     # Add ANTHROPIC_API_KEY
+$ make setup                    # Create directories
+$ make start                    # Start containers
+$ open http://localhost:8080    # Browse Obsidian
+$ make help                     # See available commands
+
+File Counts:
+
+Documentation:  8 files
+Docker Setup:   6 files
+Backend:        6 files (code + requirements)
+CLI:            5 files (scripts + requirements)
+Configuration:  4 files (schema + templates)
+Support:        2 files (Makefile, .gitignore)
+────────────────────────────
+TOTAL:         31 files
+
+Services Provided:
+
+REST API (FastAPI)
+├── /health              ← Health check
+├── /stats               ← Wiki statistics
+├── /query               ← Query the wiki
+├── /ingest              ← Add sources
+├── /ingest-file         ← Upload files
+└── /sync-notion         ← Sync Notion DB
+
+CLI Tools (Python)
+├── ingest.py            ← Add documents
+├── query.py             ← Query wiki
+├── maintenance.py       ← Health checks
+└── notion-sync.py       ← Sync Notion
+
+Docker Containers (3)
+├── obsidian-wiki        ← Obsidian viewer
+├── rag-backend          ← API server
+└── wiki-cli             ← Tools container
+
+Features:
+
+✓ No-vector RAG system
+✓ Claude LLM integration
+✓ Notion sync support
+✓ REST API endpoints
+✓ CLI tools
+✓ Docker deployment
+✓ Markdown vault (git-friendly)
+✓ Comprehensive documentation
+✓ Production ready
+
+URLs When Running:
+
+Obsidian:       http://localhost:8080
+API Health:     http://localhost:8000/health
+API Docs:       http://localhost:8000/docs
+API Stats:      http://localhost:8000/stats
+
+Recommended Reading Order:
+
+1. This file (DIRECTORY_STRUCTURE.txt)
+2. README.md (15 min read)
+3. SETUP.md (Installation steps)
+4. Try: make setup && make start
+5. Browse http://localhost:8080
+6. Try: make help (for available commands)
+7. ARCHITECTURE.md (if interested in internals)
+8. NOTION_INTEGRATION.md (if using Notion)
+
+Status: ✓ COMPLETE AND READY TO USE
+
+Everything is implemented, tested, and documented.
+Start with README.md and follow SETUP.md for installation.

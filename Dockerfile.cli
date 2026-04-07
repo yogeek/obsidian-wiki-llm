@@ -1,0 +1,25 @@
+FROM python:3.11-slim
+
+WORKDIR /workspace
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    wget \
+    jq \
+    yq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements-cli.txt .
+RUN pip install --no-cache-dir -r requirements-cli.txt
+
+# Copy scripts and configuration
+COPY scripts/ ./scripts/
+COPY config/ ./config/
+
+# Create necessary directories
+RUN mkdir -p /workspace/vault /workspace/raw_sources
+
+ENV PYTHONUNBUFFERED=1

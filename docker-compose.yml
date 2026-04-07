@@ -1,0 +1,70 @@
+version: '3.9'
+
+services:
+  # Obsidian with Docker support
+  obsidian:
+    image: linuxserver/obsidian:latest
+    container_name: obsidian-wiki
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+      - "8080:8080"
+    volumes:
+      - ./vault:/config/workspace
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    shm_size: 1gb
+    restart: unless-stopped
+    networks:
+      - wiki-network
+
+  # Backend API for RAG operations
+  rag-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: rag-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./vault:/app/vault
+      - ./raw_sources:/app/raw_sources
+      - ./config:/app/config
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - NOTION_API_KEY=${NOTION_API_KEY}
+      - NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
+      - CLAUDE_MODELS=${CLAUDE_MODELS}
+    restart: unless-stopped
+    networks:
+      - wiki-network
+
+  # Development/CLI tools container
+  cli-tools:
+    build:
+      context: .
+      dockerfile: Dockerfile.cli
+    container_name: wiki-cli
+    volumes:
+      - ./vault:/workspace/vault
+      - ./raw_sources:/workspace/raw_sources
+      - ./config:/workspace/config
+      - ./scripts:/workspace/scripts
+      - ./backend:/workspace/backend
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - NOTION_API_KEY=${NOTION_API_KEY}
+      - NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
+      - CLAUDE_MODELS=${CLAUDE_MODELS}
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    networks:
+      - wiki-network
+    command: /bin/bash
+
+networks:
+  wiki-network:
+    driver: bridge
