@@ -43,15 +43,41 @@ class NotionSync:
             items = self._fetch_notion_items()
             synced_count = 0
             updated_count = 0
+            tag_items = {}  # Track items by tag for creating hub pages
 
+            # First pass: sync all items and collect tags
             for item in items:
                 try:
+                    properties = item.get("properties", {})
+
+                    # Get title first
+                    title = self._extract_property(properties, "Nom", "title") or self._extract_property(properties, "Name", "title")
+                    if not title:
+                        continue
+
+                    # Get all tags (multi-tag support)
+                    tags = self._extract_tags(properties)
+
                     if self._sync_item_to_wiki(item):
                         synced_count += 1
                     else:
                         updated_count += 1
+
+                    # Collect items by tag
+                    filename = title.lower().replace(" ", "-").replace("/", "-")
+                    for tag in tags:
+                        if tag not in tag_items:
+                            tag_items[tag] = []
+                        tag_items[tag].append(filename)
                 except Exception as e:
                     logger.error(f"Error syncing item: {e}")
+
+            # Second pass: create tag hub pages and link items
+            for tag, item_filenames in tag_items.items():
+                try:
+                    self._create_tag_hub(tag, item_filenames)
+                except Exception as e:
+                    logger.error(f"Error creating tag hub for {tag}: {e}")
 
             self._update_sync_status("success", synced_count + updated_count)
 
@@ -86,7 +112,8 @@ class NotionSync:
         # Extract properties (field mapping - supports both English and French property names)
         title = self._extract_property(properties, "Nom", "title") or self._extract_property(properties, "Name", "title")
         description = self._extract_property(properties, "Description", "rich_text")
-        category = self._extract_property(properties, "tag", "multi_select") or self._extract_property(properties, "Category", "select")
+        tags = self._extract_tags(properties)
+        primary_tag = tags[0] if tags else "uncategorized"
         url = self._extract_property(properties, "URL", "url")
         date_discovered = self._extract_property(properties, "Date", "date") or self._extract_property(properties, "Date Discovered", "date")
         status = self._extract_property(properties, "État", "select") or self._extract_property(properties, "Status", "select")
@@ -105,32 +132,38 @@ class NotionSync:
         # Prepare frontmatter
         frontmatter_data = {
             "type": "technology_watch",
-            "category": category or "uncategorized",
+            "category": primary_tag,
             "source_url": url,
             "date_discovered": date_discovered or datetime.now().isoformat(),
             "status": status or "new",
             "notion_sync": True,
             "notion_id": item.get("id", ""),
-            "tags": [category] if category else []
+            "tags": tags if tags else []
         }
 
-        # Prepare content
+        # Prepare content with links to all tag hubs
+        tag_links = " ".join([f"[[{tag.lower().replace(' ', '-').replace('/', '-')}]]" for tag in tags])
+        url_section = f"- **URL:** [{url}]({url})" if url else "- **URL:** No URL provided"
+
+        # Build related items section with links to all tags
+        related_tags = "\n".join([f"- See [[{tag.lower().replace(' ', '-').replace('/', '-')}]]" for tag in tags])
+
         content = f"""## Summary
 {description or "No description provided"}
 
-## Category
-`{category or "uncategorized"}`
+## Tags
+{tag_links}
 
 ## Key Details
-- **URL:** [{url}]({url}) if url else "No URL"
+{url_section}
 - **Discovered:** {date_discovered or "Unknown"}
 - **Status:** {status or "New"}
 
 ## Why This Matters
 <!-- Add analysis of relevance and potential impact -->
 
-## Related Technologies/Entities
-<!-- Add related pages using [[]] links -->
+## Related Items by Tag
+{related_tags}
 
 ## Action Items
 - [ ] Evaluate for adoption
@@ -155,6 +188,27 @@ Synced from Notion database"""
         except Exception as e:
             logger.error(f"Error creating wiki page for Notion item: {e}")
             raise
+
+    def _extract_tags(self, properties: Dict) -> list:
+        """Extract all tags from Notion item (supports multi_select)"""
+        # Try French property name first, then English
+        tags_prop = properties.get("tag") or properties.get("Category")
+
+        if not tags_prop:
+            return []
+
+        # Handle multi_select (list of tags)
+        if "multi_select" in tags_prop:
+            items = tags_prop.get("multi_select", [])
+            return [item.get("name") for item in items if item.get("name")]
+
+        # Handle select (single tag)
+        if "select" in tags_prop:
+            select = tags_prop.get("select", {})
+            tag_name = select.get("name")
+            return [tag_name] if tag_name else []
+
+        return []
 
     def _extract_property(self, properties: Dict, field_name: str, prop_type: str) -> Optional[str]:
         """Extract a property value from Notion properties"""
@@ -182,6 +236,48 @@ Synced from Notion database"""
             return date_obj.get("start") if date_obj else None
 
         return None
+
+    def _create_tag_hub(self, tag: str, item_filenames: list):
+        """Create a hub page for a tag that lists all items with this tag"""
+        tag_filename = tag.lower().replace(" ", "-").replace("/", "-")
+
+        # Check if hub already exists
+        existing = self.wiki_manager.get_page("technology_watch", tag_filename)
+        is_new = existing is None
+
+        # Build items list with internal links
+        items_list = "\n".join([f"- [[{filename}]]" for filename in sorted(set(item_filenames))])
+
+        content = f"""# {tag}
+
+Hub for all items tagged as **{tag}**.
+
+## Items in this category
+
+{items_list}
+
+---
+
+_This is an auto-generated hub page linking all items synced from Notion with the "{tag}" tag._
+"""
+
+        frontmatter_data = {
+            "type": "technology_watch_hub",
+            "tag": tag,
+            "notion_sync": True,
+            "created_date": datetime.now().isoformat() if is_new else None
+        }
+
+        try:
+            self.wiki_manager.create_page(
+                category="technology_watch",
+                filename=tag_filename,
+                frontmatter_data=frontmatter_data,
+                content=content
+            )
+            logger.info(f"Created tag hub for {tag} with {len(set(item_filenames))} items")
+        except Exception as e:
+            logger.error(f"Error creating tag hub for {tag}: {e}")
 
     def _update_sync_status(self, status: str, count: int):
         """Update sync status file"""
