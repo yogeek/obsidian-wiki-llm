@@ -133,7 +133,7 @@ class WikiManager:
     def lint(self) -> Dict:
         """Run maintenance checks on the wiki"""
         return {
-            "orphaned": self.find_orphaned_pages(),
+            "orphaned_pages": self.find_orphaned_pages(),
             "broken_links": self._find_broken_links(),
             "contradictions": [],
             "recommendations": []

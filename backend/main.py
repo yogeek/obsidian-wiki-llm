@@ -144,7 +144,7 @@ async def run_maintenance():
         result = wiki_manager.lint()
         return {
             "status": "success",
-            "orphaned_pages": result.get("orphaned", []),
+            "orphaned_pages": result.get("orphaned_pages", []),
             "broken_links": result.get("broken_links", []),
             "contradictions": result.get("contradictions", []),
             "recommendations": result.get("recommendations", [])
