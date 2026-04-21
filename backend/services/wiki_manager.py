@@ -12,8 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class WikiManager:
-    def __init__(self, vault_path: Path):
+    def __init__(self, vault_path: Path, vault_name: str = "default"):
         self.vault_path = vault_path
+        self.vault_name = vault_name
         self._ensure_structure()
 
     def _ensure_structure(self):

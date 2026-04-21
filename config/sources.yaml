@@ -1,0 +1,20 @@
+# config/sources.yaml
+# External source credentials. Source definitions are reusable — the same source
+# can be bound to multiple vaults with different filters.
+# Credential values are environment variable names (resolved at startup).
+#
+# Backup of previous config: sources.yaml.bak
+
+sources:
+  notion:
+    connector_type: "notion"
+    credentials:
+      api_key_env: "NOTION_API_KEY"
+      database_id_env: "NOTION_DATABASE_ID"
+
+  confluence:
+    connector_type: "confluence"
+    credentials:
+      api_key_env: "CONFLUENCE_API_TOKEN"
+      base_url_env: "CONFLUENCE_HOST"
+      username_env: "CONFLUENCE_USERNAME"

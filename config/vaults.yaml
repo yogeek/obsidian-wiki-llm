@@ -1,0 +1,62 @@
+# config/vaults.yaml
+# Vault definitions, source bindings, routing rules, and enrichment flags.
+# Each vault maps to one Obsidian vault (one knowledge domain).
+#
+# Backup of previous config: vaults.yaml.bak
+
+vaults:
+  tech-watch:
+    path: "/app/vaults/tech-watch"
+    description: "Technology watch: Notion tech-watch DB + Confluence DevOps pages"
+    sources:
+      # Source 1: Notion tech-watch database (all items)
+      - source: notion
+        vault_category: "technology_watch"
+        filter: {}                        # empty = all items
+        sync_interval: "6h"
+        enrich_from_url: true             # fetch URL target, auto-deduce tags on first sync
+
+      # Source 2: Confluence DevOps tech-watch pages
+      #   Parent: "Petit dejeuner Devops" (412450994) in DEVOPS space
+      #   Children:
+      #     - DevOps Coffee:        1304035584
+      #     - Veille techno:        633241954
+      #     - ARCHIVES Discussions: 413040713
+      - source: confluence
+        vault_category: "confluence_pages"
+        filter:
+          cql: "ancestor = 412450994 AND space = DEVOPS"
+        sync_interval: "6h"
+        enrich_from_url: false
+        enrich_from_content: true         # Claude deduces topic tags from Confluence page bodies
+
+  # -- Previous vault configs (backed up, uncomment to re-enable) --
+  # project-issues:
+  #   path: "/app/vaults/project-issues"
+  #   description: "JIRA tickets for project GoToProd"
+  #   sources:
+  #     - source: jira
+  #       vault_category: "jira_tickets"
+  #       filter:
+  #         jql: "project = CDSFGTP AND sprint = 6852 AND status != Done"
+  #       sync_interval: "24h"
+  #       enrich_from_url: false
+  #       enrich_from_content: true
+  #
+  # project-docs:
+  #   path: "/app/vaults/project-docs"
+  #   description: "Confluence pages for project GoToProd"
+  #   sources:
+  #     - source: confluence
+  #       vault_category: "confluence_pages"
+  #       filter:
+  #         cql: "ancestor = 430932050 AND space = GOT"
+  #       sync_interval: "12h"
+  #       enrich_from_url: false
+  #       enrich_from_content: true
+
+scheduler:
+  maintenance:
+    enabled: true
+    day_of_week: "sun"
+    hour: 2

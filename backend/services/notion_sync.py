@@ -25,6 +25,7 @@ class NotionSync:
         else:
             try:
                 from notion_client import Client
+
                 self.client = Client(auth=self.api_key)
             except ImportError:
                 logger.error("notion-client not installed")
@@ -36,7 +37,7 @@ class NotionSync:
             return {
                 "synced": 0,
                 "updated": 0,
-                "summary": "Notion client not configured"
+                "summary": "Notion client not configured",
             }
 
         try:
@@ -51,7 +52,9 @@ class NotionSync:
                     properties = item.get("properties", {})
 
                     # Get title first
-                    title = self._extract_property(properties, "Nom", "title") or self._extract_property(properties, "Name", "title")
+                    title = self._extract_property(
+                        properties, "Nom", "title"
+                    ) or self._extract_property(properties, "Name", "title")
                     if not title:
                         continue
 
@@ -84,17 +87,13 @@ class NotionSync:
             return {
                 "synced": synced_count,
                 "updated": updated_count,
-                "summary": f"Synced {synced_count} new items, updated {updated_count} existing items"
+                "summary": f"Synced {synced_count} new items, updated {updated_count} existing items",
             }
 
         except Exception as e:
             logger.error(f"Error during Notion sync: {e}")
             self._update_sync_status("error", 0)
-            return {
-                "synced": 0,
-                "updated": 0,
-                "summary": f"Error during sync: {e}"
-            }
+            return {"synced": 0, "updated": 0, "summary": f"Error during sync: {e}"}
 
     def _fetch_notion_items(self) -> list:
         """Fetch items from Notion database"""
@@ -110,13 +109,19 @@ class NotionSync:
         properties = item.get("properties", {})
 
         # Extract properties (field mapping - supports both English and French property names)
-        title = self._extract_property(properties, "Nom", "title") or self._extract_property(properties, "Name", "title")
+        title = self._extract_property(
+            properties, "Nom", "title"
+        ) or self._extract_property(properties, "Name", "title")
         description = self._extract_property(properties, "Description", "rich_text")
         tags = self._extract_tags(properties)
         primary_tag = tags[0] if tags else "uncategorized"
         url = self._extract_property(properties, "URL", "url")
-        date_discovered = self._extract_property(properties, "Date", "date") or self._extract_property(properties, "Date Discovered", "date")
-        status = self._extract_property(properties, "État", "select") or self._extract_property(properties, "Status", "select")
+        date_discovered = self._extract_property(
+            properties, "Date", "date"
+        ) or self._extract_property(properties, "Date Discovered", "date")
+        status = self._extract_property(
+            properties, "État", "select"
+        ) or self._extract_property(properties, "Status", "select")
 
         if not title:
             logger.warning(f"Skipping Notion item without title: {item}")
@@ -138,15 +143,24 @@ class NotionSync:
             "status": status or "new",
             "notion_sync": True,
             "notion_id": item.get("id", ""),
-            "tags": tags if tags else []
+            "tags": tags if tags else [],
         }
 
         # Prepare content with links to all tag hubs
-        tag_links = " ".join([f"[[{tag.lower().replace(' ', '-').replace('/', '-')}]]" for tag in tags])
-        url_section = f"- **URL:** [{url}]({url})" if url else "- **URL:** No URL provided"
+        tag_links = " ".join(
+            [f"[[{tag.lower().replace(' ', '-').replace('/', '-')}]]" for tag in tags]
+        )
+        url_section = (
+            f"- **URL:** [{url}]({url})" if url else "- **URL:** No URL provided"
+        )
 
         # Build related items section with links to all tags
-        related_tags = "\n".join([f"- See [[{tag.lower().replace(' ', '-').replace('/', '-')}]]" for tag in tags])
+        related_tags = "\n".join(
+            [
+                f"- See [[{tag.lower().replace(' ', '-').replace('/', '-')}]]"
+                for tag in tags
+            ]
+        )
 
         content = f"""## Summary
 {description or "No description provided"}
@@ -182,7 +196,7 @@ Synced from Notion database"""
                 category="technology_watch",
                 filename=filename,
                 frontmatter_data=frontmatter_data,
-                content=content
+                content=content,
             )
             return is_new
         except Exception as e:
@@ -210,7 +224,9 @@ Synced from Notion database"""
 
         return []
 
-    def _extract_property(self, properties: Dict, field_name: str, prop_type: str) -> Optional[str]:
+    def _extract_property(
+        self, properties: Dict, field_name: str, prop_type: str
+    ) -> Optional[str]:
         """Extract a property value from Notion properties"""
         if field_name not in properties:
             return None
@@ -219,10 +235,18 @@ Synced from Notion database"""
 
         if prop_type == "title":
             text_list = prop.get("title", [])
-            return "".join(t.get("plain_text", "") for t in text_list) if text_list else None
+            return (
+                "".join(t.get("plain_text", "") for t in text_list)
+                if text_list
+                else None
+            )
         elif prop_type == "rich_text":
             text_list = prop.get("rich_text", [])
-            return "".join(t.get("plain_text", "") for t in text_list) if text_list else None
+            return (
+                "".join(t.get("plain_text", "") for t in text_list)
+                if text_list
+                else None
+            )
         elif prop_type == "select":
             select = prop.get("select", {})
             return select.get("name") if select else None
@@ -246,7 +270,9 @@ Synced from Notion database"""
         is_new = existing is None
 
         # Build items list with internal links
-        items_list = "\n".join([f"- [[{filename}]]" for filename in sorted(set(item_filenames))])
+        items_list = "\n".join(
+            [f"- [[{filename}]]" for filename in sorted(set(item_filenames))]
+        )
 
         content = f"""# {tag}
 
@@ -264,8 +290,9 @@ _This is an auto-generated hub page linking all items synced from Notion with th
         frontmatter_data = {
             "type": "technology_watch_hub",
             "tag": tag,
+            "tags": [tag.lower()],
             "notion_sync": True,
-            "created_date": datetime.now().isoformat() if is_new else None
+            "created_date": datetime.now().isoformat() if is_new else None,
         }
 
         try:
@@ -273,9 +300,11 @@ _This is an auto-generated hub page linking all items synced from Notion with th
                 category="technology_watch",
                 filename=tag_filename,
                 frontmatter_data=frontmatter_data,
-                content=content
+                content=content,
             )
-            logger.info(f"Created tag hub for {tag} with {len(set(item_filenames))} items")
+            logger.info(
+                f"Created tag hub for {tag} with {len(set(item_filenames))} items"
+            )
         except Exception as e:
             logger.error(f"Error creating tag hub for {tag}: {e}")
 
@@ -292,20 +321,12 @@ _This is an auto-generated hub page linking all items synced from Notion with th
     def get_sync_status(self) -> Dict:
         """Get last sync status"""
         if not self.sync_status_file.exists():
-            return {
-                "status": "never",
-                "last_sync": None,
-                "item_count": 0
-            }
+            return {"status": "never", "last_sync": None, "item_count": 0}
 
         try:
             content = self.sync_status_file.read_text()
             status, timestamp, count = content.split("|")
-            return {
-                "status": status,
-                "last_sync": timestamp,
-                "item_count": int(count)
-            }
+            return {"status": status, "last_sync": timestamp, "item_count": int(count)}
         except Exception as e:
             logger.error(f"Error reading sync status: {e}")
             return {"status": "error", "last_sync": None, "item_count": 0}

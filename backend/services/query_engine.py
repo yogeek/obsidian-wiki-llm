@@ -17,9 +17,8 @@ class QueryEngine:
     # Can be overridden via CLAUDE_MODELS env var (comma-separated: "model1,model2,model3")
     DEFAULT_MODELS = [
         "claude-haiku-4-5-20251001",
-        "claude-sonnet-4-5-20250929",
         "claude-sonnet-4-6",
-        "claude-opus-4-1-20250805",
+        "claude-opus-4-7",
     ]
 
     def __init__(self, wiki_manager):

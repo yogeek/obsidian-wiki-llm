@@ -9,3 +9,6 @@ python-multipart==0.0.6
 httpx==0.25.2
 python-frontmatter==1.0.1
 python-dotenv==1.0.0
+apscheduler>=3.10,<4.0
+jira>=3.5,<4.0
+atlassian-python-api>=3.41

@@ -5,12 +5,15 @@ services:
   obsidian:
     image: linuxserver/obsidian:latest
     container_name: obsidian-wiki
+    entrypoint: /app/obsidian-entrypoint.sh
     ports:
       - "3000:3000"
       - "3001:3001"
       - "8080:8080"
     volumes:
-      - ./vault:/config/workspace
+      - ./vaults:/config/workspace
+      - ./obsidian-entrypoint.sh:/app/obsidian-entrypoint.sh:ro
+      - ./config/graph-seed.json:/app/graph-seed.json:ro
     environment:
       - PUID=1000
       - PGID=1000
@@ -30,13 +33,23 @@ services:
       - "8000:8000"
     volumes:
       - ./vault:/app/vault
+      - ./vaults:/app/vaults
       - ./raw_sources:/app/raw_sources
       - ./config:/app/config
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - NOTION_API_KEY=${NOTION_API_KEY}
       - NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
       - CLAUDE_MODELS=${CLAUDE_MODELS}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN:-}
+      - JIRA_HOST=${JIRA_HOST:-}
+      - JIRA_USERNAME=${JIRA_USERNAME:-}
+      - CONFLUENCE_API_TOKEN=${CONFLUENCE_API_TOKEN:-}
+      - CONFLUENCE_HOST=${CONFLUENCE_HOST:-}
+      - CONFLUENCE_USERNAME=${CONFLUENCE_USERNAME:-}
+      - SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+      - REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
     restart: unless-stopped
     networks:
       - wiki-network
