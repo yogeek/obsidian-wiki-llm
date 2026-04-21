@@ -2,446 +2,182 @@
 
 ## What Was Built
 
-A complete, production-ready system for building a personal knowledge base using LLMs, based on Andrej Karpathy's no-vector RAG approach. The system uses Obsidian for viewing, Claude for intelligence, and Docker for portability.
+A production-ready personal knowledge base system based on Andrej Karpathy's no-vector RAG approach. External sources (Notion, Confluence, JIRA, raw documents) sync automatically into a structured Obsidian markdown vault. Claude maintains the wiki and answers natural language queries by traversing it.
+
+No vector databases. No embeddings. Markdown files + LLM.
+
+## Architecture
+
+```
+External Sources (Notion, Confluence, JIRA)
+    ↓ [Connectors + APScheduler]
+VaultManager (config/vaults.yaml)
+    ↓ [WikiManager per vault]
+Markdown Vault (Obsidian)
+    ↓ [BFS traversal]
+QueryEngine → Claude → Answer
+
+Raw Documents
+    ↓ [IngestionService]
+Markdown Vault
+```
 
 ## Project Structure
 
 ```
 obsidian-wiki-llm/
-├── README.md                          # System overview & usage guide
-├── SETUP.md                           # Step-by-step installation guide
-├── NOTION_INTEGRATION.md              # Notion integration study & docs
-├── CLAUDE.md                          # Project instructions for Claude Code
-├── IMPLEMENTATION_SUMMARY.md          # This file
-├── Makefile                           # Convenient command shortcuts
-│
-├── docker compose.yml                 # Docker orchestration
-├── Dockerfile.backend                 # Backend API container
-├── Dockerfile.cli                     # CLI tools container
-├── .env.example                       # Environment variables template
-│
-├── backend/                           # FastAPI backend
-│   ├── main.py                        # REST API endpoints
+├── backend/
+│   ├── main.py                          # FastAPI app + service wiring
 │   └── services/
-│       ├── wiki_manager.py            # Vault CRUD operations
-│       ├── ingestion.py               # Claude-powered source ingestion
-│       ├── query_engine.py            # Wiki querying & synthesis
-│       └── notion_sync.py             # Notion → Wiki synchronization
-│
-├── scripts/                           # CLI tools
-│   ├── ingest.py                      # Ingest sources
-│   ├── query.py                       # Query the wiki
-│   ├── maintenance.py                 # Wiki maintenance (lint, stats)
-│   └── notion-sync.py                 # Sync Notion database
-│
-├── config/                            # Configuration files
-│   ├── wiki_schema.yaml               # Wiki structure & rules
-│   └── templates/
-│       ├── entity-template.md         # Entity page template
-│       ├── topic-template.md          # Topic hub template
-│       ├── tech-watch-template.md     # Technology watch template
-│       └── (others...)
-│
-├── vault/                             # Obsidian vault (git-friendly!)
-│   ├── entities/                      # Extracted concepts
-│   ├── topics/                        # Thematic hubs
-│   ├── sources/                       # Content references
-│   ├── technology_watch/              # Notion synced items
-│   ├── decisions/                     # Decision logs
-│   └── .obsidian/                     # Obsidian config
-│
-└── raw_sources/                       # Original documents
-    └── (your documents here)
+│       ├── wiki_manager.py              # Vault CRUD, lint, stats
+│       ├── vault_manager.py             # Multi-vault orchestrator (config-driven)
+│       ├── connector_registry.py        # Self-registering connector factory
+│       ├── scheduler.py                 # APScheduler: sync + maintenance jobs
+│       ├── url_enricher.py              # URL/content → Claude tag deduction
+│       ├── ingestion.py                 # Raw source → 10-15 wiki page updates
+│       ├── query_engine.py              # BFS traversal + LLM synthesis
+│       ├── notion_sync.py               # Legacy fallback connector
+│       └── connectors/
+│           ├── base_connector.py        # ABC: authenticate, fetch_updates, sync
+│           ├── notion_connector.py      # Notion implementation
+│           ├── confluence_connector.py  # Confluence with CQL support
+│           └── jira_connector.py        # JIRA with JQL + sprint/epic hubs
+├── config/
+│   ├── sources.yaml                     # Source auth (env-var refs)
+│   ├── vaults.yaml                      # Vault bindings + sync schedules
+│   ├── wiki_schema.yaml                 # Legacy structure config
+│   └── templates/                       # Page templates
+├── scripts/                             # CLI tools (Click)
+├── vaults/                              # Multi-vault data
+├── vault/                               # Legacy single vault
+└── docs/adr/                            # Architecture Decision Records
 ```
 
-## Core Technologies
+## Features Implemented
 
-- **Frontend**: Obsidian (web interface for browsing vault)
-- **Backend**: FastAPI with Python
-- **LLM**: Anthropic Claude (for intelligence)
-- **Wiki Storage**: Markdown files (git-friendly)
-- **Container**: Docker & Docker Compose (portability)
-- **External Integration**: Notion API (optional)
+### 1. Multi-Vault Connector Framework
 
-## Key Features Implemented
+Config-driven routing from external sources to isolated vaults:
 
-### 1. No-Vector RAG System
-✓ Three-layer architecture (Raw Sources → Wiki → Queries)
-✓ LLM maintains persistent wiki instead of indexing
-✓ Knowledge compounds with each source added
-✓ 10-15 page updates per ingestion pass
+- `config/sources.yaml` — defines sources and credential env-var references
+- `config/vaults.yaml` — defines vaults, bindings, filters, sync intervals, enrichment flags
+- `VaultManager` loads both files, instantiates connectors and WikiManagers
+- Any source can feed any vault with independent filters (same Confluence space can route to multiple vaults with different CQL queries)
 
-### 2. Ingestion Pipeline
-✓ Claude analyzes sources and updates wiki pages
-✓ Automatic entity extraction
-✓ Cross-reference detection
-✓ Contradiction flagging
-✓ Frontmatter metadata management
+### 2. Connectors
 
-### 3. Query Engine
-✓ BFS traversal of wiki links
-✓ Multi-hop context gathering
-✓ LLM synthesis of answers
-✓ Source attribution
-✓ Confidence scoring
+All implement `BaseConnector` (template method + strategy pattern):
 
-### 4. Maintenance & Health Checks
-✓ Orphaned page detection
-✓ Broken link identification
-✓ Stale content tracking (>30 days)
-✓ Statistics reporting
-✓ Lint operations
+| Connector | Auth | Filtering | Hub Pages |
+|-----------|------|-----------|-----------|
+| Notion | API key | Database ID | Tag hubs |
+| Confluence | PAT token | CQL queries, space, labels | Label hubs, ancestor links |
+| JIRA | PAT token | JQL, project, components | Sprint hubs, epic hubs, tag hubs |
 
-### 5. Notion Integration
-✓ Bi-directional API connection
-✓ Technology watch database sync
-✓ Field mapping (Notion → Markdown)
-✓ Sync status tracking
-✓ Incremental updates
+Sync state is persisted per connector at `vault_path/.{connector}.sync_status` for incremental updates.
 
-### 6. REST API
-✓ Health checks and statistics
-✓ Query endpoint with context control
-✓ Ingestion endpoints (text/file)
-✓ Maintenance operations
-✓ Notion sync triggers
+### 3. Scheduled Background Sync
 
-### 7. Docker Deployment
-✓ Multi-container setup (Obsidian + Backend + CLI)
-✓ Isolated services with network bridge
-✓ Volume mounts for persistent data
-✓ Environment-based configuration
-✓ Easy cross-platform deployment
+`WikiScheduler` (APScheduler) manages:
+- Per-binding `IntervalTrigger` sync jobs (e.g. "6h", "30m", "1d")
+- Per-vault `CronTrigger` maintenance jobs (weekly lint)
+- `max_instances=1` prevents overlapping runs
+- Manual trigger via `POST /vaults/{vault}/sync/{source}`
 
-## Usage Examples
+### 4. URL and Content Enrichment
 
-### Quick Start (5 minutes)
+`UrlEnricher` adds semantic tags to synced pages:
+- `enrich_from_url: true` — fetches the page's URL, Claude Haiku deduces 3-7 tags
+- `enrich_from_content: true` — Claude tags from the body text (for Confluence pages)
+- Idempotent: skips if `content_fetched: true` already in frontmatter
+
+### 5. No-Vector RAG Query Engine
+
+`QueryEngine`:
+1. Finds seed wiki pages matching the question
+2. BFS traversal via `[[wiki-links]]` (depth ≤ 3, max 20 pages)
+3. Claude synthesizes a grounded answer from gathered content
+4. Returns answer + source page list
+
+### 6. Ingestion Pipeline
+
+`IngestionService`: Claude reads a raw source document and produces a structured JSON describing 10-15 wiki page updates (create or amend). Pages are written with frontmatter, cross-references, and `[[wiki-links]]`.
+
+### 7. Wiki Maintenance
+
+`WikiManager` lint detects: orphaned pages, broken links, stale content (>30 days). Stats report: total pages, by type, orphaned, stale.
+
+### 8. REST API
+
+See `AGENTS.md` for full endpoint table. New multi-vault endpoints (`/vaults`, `/scheduler/status`) coexist with legacy endpoints for backward compatibility.
+
+## Configuration Reference
+
+### Minimal .env
+
+```env
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+### With Notion
+
+```env
+ANTHROPIC_API_KEY=sk-ant-...
+NOTION_API_KEY=secret_...
+NOTION_DATABASE_ID=...
+```
+
+### With Confluence
+
+```env
+CONFLUENCE_HOST=https://your-company.atlassian.net
+CONFLUENCE_USERNAME=you@company.com
+CONFLUENCE_API_TOKEN=...
+```
+
+## LLM Models
+
+Default fallback order (cheapest first, auto-detected at startup):
+
+| Priority | Model | Used for |
+|----------|-------|---------|
+| 1st | `claude-haiku-4-5-20251001` | All tasks by default; URL enrichment (hardcoded) |
+| 2nd | `claude-sonnet-4-6` | Fallback |
+| 3rd | `claude-opus-4-7` | Last resort |
+
+Override via `CLAUDE_MODELS` env var (comma-separated).
+
+## Quick Start
 
 ```bash
-cd obsidian-wiki-llm
 cp .env.example .env
-# Edit .env with your ANTHROPIC_API_KEY
+# Add ANTHROPIC_API_KEY to .env
 
 make setup
 make start
 
-# Browse at http://localhost:8080
-# Test at http://localhost:8000/health
-```
+# Browse vault
+open http://localhost:8080
 
-### Ingest a Document
+# Query
+make query Q="What do I know about Kubernetes?"
 
-```bash
-echo "Document content" > raw_sources/article.md
+# Ingest a document
 make ingest FILE=raw_sources/article.md
 ```
-
-### Query the Wiki
-
-```bash
-make query Q="What technologies should I watch?"
-# Or via API:
-curl -X POST http://localhost:8000/query \
-  -H "Content-Type: application/json" \
-  -d '{"query": "What technologies should I watch?"}'
-```
-
-### Sync from Notion
-
-```bash
-# One-time sync
-make notion-sync
-
-# Check status
-make notion-status
-```
-
-### Run Maintenance
-
-```bash
-# Find issues
-make maintenance ACTION=lint
-
-# Get statistics
-make maintenance ACTION=stats
-
-# Find stale pages
-make maintenance ACTION=stale
-```
-
-## Architecture Advantages
-
-### Why This Approach?
-
-1. **Persistent Knowledge Compounding**
-   - Unlike RAG that re-answers each time, the wiki grows richer
-   - LLM can synthesize across multiple sources
-   - Cross-references accumulate over time
-
-2. **No Vector Database Required**
-   - Simple markdown files
-   - Git-friendly and version-controllable
-   - Works for ~100-500 documents at laptop scale
-
-3. **Local & Portable**
-   - All data in vault/ directory
-   - Docker makes it runnable anywhere
-   - No cloud dependency
-
-4. **Transparency & Control**
-   - You can read every wiki page
-   - Understand how knowledge is structured
-   - Modify rules in wiki_schema.yaml
-
-5. **Integration Ready**
-   - Notion sync for external data sources
-   - REST API for custom tooling
-   - CLI for automation
-
-## Notion Integration Study Results
-
-**Conclusion: FULLY FEASIBLE** - See NOTION_INTEGRATION.md for complete analysis.
-
-### Key Findings:
-
-✓ Notion API provides stable, documented access
-✓ Field mapping is straightforward (property types)
-✓ Sync can be unidirectional (Notion → Wiki) or bidirectional
-✓ 100 requests/minute limit is generous for typical use
-✓ Technology watch items sync in seconds
-✓ Wiki becomes richer when combined with RAG
-
-### Data Flow:
-```
-Notion Database (technology watch)
-    ↓ [API Query]
-NotionSync Service
-    ↓ [Transform & map fields]
-Wiki Manager [Create markdown pages]
-    ↓ [Write to vault]
-Obsidian [View & browse]
-    ↓ [LLM can synthesize across items]
-Richer Knowledge Base
-```
-
-### Advanced Scenarios:
-- Bi-directional sync (wiki → Notion)
-- Filtered sync (only specific categories)
-- Scheduled auto-sync (every 6 hours)
-- Relation mapping (Notion relations → wiki links)
-
-## Configuration & Customization
-
-### Customize Wiki Structure
-
-Edit `config/wiki_schema.yaml`:
-```yaml
-structure:
-  directories:
-    research_papers:  # Add new directory
-      description: "Academic papers"
-      template: "research-template.md"
-```
-
-### Adjust Ingestion Rules
-
-```yaml
-ingestion:
-  max_pages_per_ingest: 15  # Limit pages created per source
-  deduplication: true       # Detect duplicate content
-  staleness_tracking: true  # Track update dates
-```
-
-### Modify Notion Sync
-
-```yaml
-integration:
-  notion:
-    enabled: true
-    sync_interval: "6h"     # Change frequency
-    fields:                 # Map Notion fields
-      title: "Name"
-      category: "Category"
-```
-
-## API Endpoints Reference
-
-```
-GET  /health                  - Service health
-GET  /stats                   - Wiki statistics
-GET  /notion/status           - Notion sync status
-
-POST /query                   - Query the wiki
-POST /ingest                  - Ingest source content
-POST /ingest-file             - Upload and ingest file
-
-POST /maintenance/lint        - Run linting checks
-POST /sync-notion             - Trigger Notion sync
-```
-
-## Performance & Scalability
-
-- **Query depth**: Limited to 3 by default (configurable)
-- **Context pages**: Limited to 20 pages (prevents token overflow)
-- **Ingestion**: 10-15 pages per source (focused updates)
-- **Wiki size**: Optimized for ~100-500 documents
-- **API workers**: Can scale horizontally with Uvicorn
-
-## Next Steps for Production Use
-
-1. ✓ System installed and tested
-2. ✓ Docker setup verified
-3. ✓ Notion integration analyzed
-4. **TODO**: Add your technology watch items
-5. **TODO**: Customize wiki_schema.yaml for your domains
-6. **TODO**: Set up Notion sync with your database
-7. **TODO**: Configure Obsidian plugins/themes
-8. **TODO**: Schedule regular maintenance
-
-## Example Workflows
-
-### Build a Technology Watch System
-
-```bash
-# 1. Configure Notion database
-# 2. Set NOTION_API_KEY and NOTION_DATABASE_ID in .env
-# 3. Run sync
-make notion-sync
-
-# 4. Obsidian now shows all items in technology_watch/
-# 5. Browse, add analysis
-# 6. Query across all items
-make query Q="What frameworks are trending in AI?"
-
-# 7. Schedule daily sync
-# (Use cron or scheduler)
-```
-
-### Research Project Management
-
-```bash
-# 1. Create sources in raw_sources/
-# 2. Ingest each paper
-for file in raw_sources/*.pdf; do
-  make ingest FILE=$file
-done
-
-# 3. Wiki now has entities, topics with cross-references
-# 4. Query to find connections
-make query Q="How do these papers relate?"
-
-# 5. Use wiki as central knowledge hub
-```
-
-### Personal Learning Path
-
-```bash
-# 1. Add tutorials, docs, articles to raw_sources/
-make ingest FILE=raw_sources/kubernetes-tutorial.md
-make ingest FILE=raw_sources/docker-guide.md
-
-# 2. Query to synthesize understanding
-make query Q="How do Kubernetes and Docker work together?"
-
-# 3. Wiki grows with each learning session
-# 4. Review with maintenance
-make maintenance ACTION=stats
-```
-
-## Files Overview
-
-### Documentation (Read First)
-- `README.md` - Start here for overview
-- `SETUP.md` - Installation and quick start
-- `NOTION_INTEGRATION.md` - Notion integration details
-- `CLAUDE.md` - Project instructions
-
-### Configuration
-- `docker compose.yml` - Container setup
-- `.env.example` - Environment template
-- `Makefile` - Command shortcuts
-- `config/wiki_schema.yaml` - Wiki structure rules
-
-### Implementation
-- `backend/main.py` - FastAPI application
-- `backend/services/` - Core services
-- `scripts/` - CLI tools
-
-### Data (Git-Friendly)
-- `vault/` - Your knowledge base (markdown files)
-- `raw_sources/` - Original documents
 
 ## Deployment Checklist
 
 - [ ] `.env` configured with API keys
-- [ ] `docker compose up -d` runs successfully
-- [ ] Obsidian accessible at http://localhost:8080
-- [ ] API responding at http://localhost:8000/health
-- [ ] First document ingested successfully
-- [ ] Query returns meaningful results
-- [ ] Notion sync configured (if using)
-- [ ] Regular backups set up
-- [ ] Git repository initialized
-- [ ] Obsidian plugins installed (optional)
+- [ ] `docker compose up -d` succeeds
+- [ ] `curl http://localhost:8000/health` returns 200
+- [ ] Obsidian loads at http://localhost:8080
+- [ ] `config/sources.yaml` and `config/vaults.yaml` configured
+- [ ] First sync completes: `POST /vaults/{vault}/sync/{source}`
+- [ ] Query returns grounded answer: `make query Q="..."`
 
-## Success Indicators
+## Key Design Decisions
 
-You know it's working when:
-
-✓ Obsidian web interface loads
-✓ Pages appear in vault/entities/ after ingestion
-✓ Queries return synthesized answers with sources
-✓ Maintenance reports are accurate
-✓ Notion items sync to technology_watch/
-✓ Wiki links work and follow cross-references
-✓ No errors in Docker logs
-
-## Summary of Deliverables
-
-This implementation provides:
-
-1. **Complete Working System**
-   - Obsidian + FastAPI + Claude integrated
-   - Docker for easy deployment
-   - Ready to use immediately
-
-2. **Comprehensive Documentation**
-   - Setup guide
-   - API documentation
-   - Notion integration analysis
-   - Troubleshooting guides
-
-3. **Production Features**
-   - Health checks and monitoring
-   - Maintenance and linting
-   - Backup and export friendly
-   - Git-compatible structure
-
-4. **Extensibility**
-   - CLI tools for automation
-   - REST API for custom integration
-   - Schema-driven configuration
-   - Template system for new page types
-
-5. **Portability**
-   - Docker Compose for consistency
-   - Environment-based configuration
-   - Works on Linux, Mac, Windows
-   - Can deploy to cloud
-
-## Final Notes
-
-This is a sophisticated, complete implementation of Karpathy's no-vector RAG concept. It's not just a toy project, it's designed for real use:
-
-- **Smart**: Claude LLM maintains your knowledge
-- **Portable**: Docker takes it anywhere
-- **Persistent**: Markdown files in git
-- **Scalable**: Can grow with your needs
-- **Transparent**: You control all data
-- **Integrated**: Works with Notion
-
-The system is ready for production use. Start adding your knowledge sources and watch your personal wiki grow!
-
----
-
-**Questions?** Check the documentation files or review the CLAUDE.md for future context.
+See `docs/adr/` for the full rationale:
+- `001` — Why connector pattern over monolithic NotionSync
+- `002` — Graphify knowledge graph integration assessment
