@@ -61,3 +61,8 @@ Thumbs.db
 # Project specific
 *.lock
 node_modules/
+
+# Tag curation
+.venv-test/
+backups/
+previews/
