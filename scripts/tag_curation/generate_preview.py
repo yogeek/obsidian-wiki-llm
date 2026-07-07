@@ -6,7 +6,6 @@ dry-run of the tag curation, without writing anything to Notion.
 Usage: python scripts/tag_curation/generate_preview.py [--backup PATH]
 """
 
-import glob
 import json
 import sys
 from datetime import datetime
@@ -17,13 +16,7 @@ import click
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from scripts.tag_curation.diff import build_diff, render_markdown
 from scripts.tag_curation.mapping import UNTAGGED_SUGGESTIONS
-
-
-def latest_backup() -> str:
-    candidates = sorted(glob.glob("backups/notion-tags-*.json"))
-    if not candidates:
-        raise SystemExit("No backup found. Run scripts/tag_curation/backup.py first.")
-    return candidates[-1]
+from scripts.tag_curation.utils import latest_backup
 
 
 @click.command()

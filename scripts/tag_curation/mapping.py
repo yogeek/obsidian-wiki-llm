@@ -244,7 +244,7 @@ def canonicalize_tags(old_tags: list[str]) -> tuple[list[str], list[str]]:
     return new_tags, unmapped
 
 
-# Suggested tags for the 11 articles that currently have zero tags in
+# Suggested tags for 8 articles that currently have zero tags in
 # Notion, derived from each article's title/URL (see plan Task 4). A
 # value of None means no honest suggestion could be made from the
 # available data — diff.py surfaces these as "needs_manual_review".

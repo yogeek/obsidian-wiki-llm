@@ -9,7 +9,6 @@ Usage:
   python scripts/tag_curation/apply.py --confirm   # actually writes to Notion
 """
 
-import glob
 import json
 import os
 import sys
@@ -24,15 +23,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from scripts.tag_curation.diff import build_diff
 from scripts.tag_curation.mapping import UNTAGGED_SUGGESTIONS
 from scripts.tag_curation.notion_api import update_page_tags
+from scripts.tag_curation.utils import latest_backup
 
 load_dotenv()
-
-
-def latest_backup() -> str:
-    candidates = sorted(glob.glob("backups/notion-tags-*.json"))
-    if not candidates:
-        raise SystemExit("No backup found. Run scripts/tag_curation/backup.py first.")
-    return candidates[-1]
 
 
 @click.command()
