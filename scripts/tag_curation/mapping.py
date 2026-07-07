@@ -4,12 +4,19 @@ database curation (see docs/superpowers/specs/2026-07-07-notion-tag-curation-des
 """
 
 CANONICAL_TAGS = [
-    "Kubernetes", "Ingress-Mesh", "AWS", "Cloud", "IaC", "Terraform",
+    "Kubernetes", "Ingress-Mesh", "aws", "cloud", "IaC", "terraform",
     "Crossplane", "CICD-GitOps", "Observabilité", "Sécurité", "Réseau",
     "IA-LLM", "Agents-IA", "MCP", "CLI-Terminal", "DevEx", "Productivité",
-    "Learning", "SRE-Ops", "FinOps", "Data-DB", "Serverless", "SSH",
+    "learning", "SRE-Ops", "FinOps", "Data-DB", "Serverless", "ssh",
     "Divers",
 ]
+# Note: "aws", "cloud", "terraform", "learning", "ssh" are lowercase (not
+# "AWS"/"Cloud"/"Terraform"/"Learning"/"SSH" as originally designed) because
+# Notion's multi_select property matches option names case-insensitively:
+# writing "AWS" to a page whose database already had a legacy "aws" option
+# silently reused that existing lowercase option instead of creating a new
+# one. Discovered empirically after Task 7's live apply run on 2026-07-07;
+# the live data is correct, only this spelling was adjusted to match it.
 
 # Legacy tag name (exact casing as stored in Notion today) -> list of
 # canonical tags it maps to. Every one of the 155 tags currently in the
@@ -33,7 +40,7 @@ TAG_MAP = {
     "registry": ["Kubernetes"],
     "Kyverno": ["Kubernetes"],
     "Policies": ["Kubernetes"],
-    "eks": ["Kubernetes", "AWS"],
+    "eks": ["Kubernetes", "aws"],
 
     # --- Ingress-Mesh ---
     "Cilium": ["Ingress-Mesh"],
@@ -45,22 +52,22 @@ TAG_MAP = {
     "apigw": ["Ingress-Mesh"],
 
     # --- AWS ---
-    "aws": ["AWS"],
-    "s3": ["AWS"],
-    "storage": ["AWS"],
-    "IAM": ["AWS", "Sécurité"],
+    "aws": ["aws"],
+    "s3": ["aws"],
+    "storage": ["aws"],
+    "IAM": ["aws", "Sécurité"],
 
     # --- Cloud ---
-    "cloud": ["Cloud"],
-    "Platform": ["Cloud"],
-    "IDP": ["Cloud"],
-    "Paas": ["Cloud"],
+    "cloud": ["cloud"],
+    "Platform": ["cloud"],
+    "IDP": ["cloud"],
+    "Paas": ["cloud"],
 
     # --- IaC / Terraform / Crossplane ---
     "IaC": ["IaC"],
     "config": ["IaC"],
     "nix": ["IaC"],
-    "terraform": ["Terraform", "IaC"],
+    "terraform": ["terraform", "IaC"],
     "Crossplane": ["Crossplane", "IaC"],
 
     # --- CICD-GitOps ---
@@ -168,9 +175,9 @@ TAG_MAP = {
     "Feedback": ["Productivité"],
 
     # --- Learning ---
-    "learning": ["Learning"],
-    "Formation": ["Learning"],
-    "Nutshell": ["Learning"],
+    "learning": ["learning"],
+    "Formation": ["learning"],
+    "Nutshell": ["learning"],
 
     # --- SRE-Ops ---
     "ops": ["SRE-Ops"],
@@ -193,13 +200,13 @@ TAG_MAP = {
 
     # --- Serverless ---
     "Serverless": ["Serverless"],
-    "lambda": ["Serverless", "AWS"],
+    "lambda": ["Serverless", "aws"],
     "Knative": ["Serverless", "Kubernetes"],
     "Wasm": ["Serverless"],
     "Webassembly": ["Serverless"],
 
     # --- SSH ---
-    "ssh": ["SSH"],
+    "ssh": ["ssh"],
 
     # --- Divers ---
     "opensource": ["Divers"],

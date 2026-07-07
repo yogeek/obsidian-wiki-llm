@@ -29,7 +29,7 @@ def test_build_diff_basic_remap():
     entries = build_diff(FIXTURE_ITEMS, UNTAGGED_SUGGESTIONS)
     e = next(e for e in entries if e.page_id == "page-2")
     assert e.old_tags == ["terraform"]
-    assert e.new_tags == ["Terraform", "IaC"]
+    assert e.new_tags == ["terraform", "IaC"]
     assert e.unmapped == []
     assert e.flags == []
 
@@ -68,7 +68,7 @@ def test_render_markdown_contains_titles_and_tags():
     entries = build_diff(FIXTURE_ITEMS, UNTAGGED_SUGGESTIONS)
     md = render_markdown(entries)
     assert "Terraform check block" in md
-    assert "Terraform, IaC" in md
+    assert "terraform, IaC" in md
     assert "NEEDS MANUAL REVIEW" in md
 
 

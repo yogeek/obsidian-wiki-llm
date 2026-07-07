@@ -60,13 +60,13 @@ def test_simple_single_mapping():
 
 def test_dual_canonical_mapping():
     new_tags, unmapped = canonicalize_tags(["terraform"])
-    assert new_tags == ["Terraform", "IaC"]
+    assert new_tags == ["terraform", "IaC"]
     assert unmapped == []
 
 
 def test_cross_domain_mapping():
     new_tags, unmapped = canonicalize_tags(["eks"])
-    assert new_tags == ["Kubernetes", "AWS"]
+    assert new_tags == ["Kubernetes", "aws"]
     assert unmapped == []
 
 
@@ -78,9 +78,9 @@ def test_dedup_union_across_multiple_old_tags():
 
 
 def test_order_preserving_union():
-    # IaC first, then terraform (adds Terraform, IaC already present)
+    # IaC first, then terraform (adds terraform, IaC already present)
     new_tags, unmapped = canonicalize_tags(["IaC", "terraform"])
-    assert new_tags == ["IaC", "Terraform"]
+    assert new_tags == ["IaC", "terraform"]
 
 
 def test_unmapped_tag_is_reported_not_dropped():
