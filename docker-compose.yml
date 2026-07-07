@@ -66,11 +66,14 @@ services:
       - ./config:/workspace/config
       - ./scripts:/workspace/scripts
       - ./backend:/workspace/backend
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - NOTION_API_KEY=${NOTION_API_KEY}
       - NOTION_DATABASE_ID=${NOTION_DATABASE_ID}
       - CLAUDE_MODELS=${CLAUDE_MODELS}
+      - SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+      - REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
     working_dir: /workspace
     stdin_open: true
     tty: true

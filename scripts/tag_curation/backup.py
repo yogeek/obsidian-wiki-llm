@@ -14,7 +14,6 @@ from datetime import datetime
 from pathlib import Path
 
 import click
-import httpx
 from dotenv import load_dotenv
 from notion_client import Client
 
@@ -29,8 +28,7 @@ load_dotenv()
 def main(out_dir: str):
     api_key = os.environ["NOTION_API_KEY"]
     database_id = os.environ["NOTION_DATABASE_ID"]
-    httpx_client = httpx.Client(verify=False)
-    client = Client(auth=api_key, client=httpx_client)
+    client = Client(auth=api_key)
 
     click.echo("Fetching all items from Notion...")
     items = fetch_all_items(client, database_id)
