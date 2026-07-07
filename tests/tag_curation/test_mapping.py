@@ -93,3 +93,25 @@ def test_empty_input():
     new_tags, unmapped = canonicalize_tags([])
     assert new_tags == []
     assert unmapped == []
+
+
+from scripts.tag_curation.mapping import UNTAGGED_SUGGESTIONS
+
+
+def test_untagged_suggestions_has_11_entries():
+    assert len(UNTAGGED_SUGGESTIONS) == 11
+
+
+def test_untagged_suggestions_values_are_canonical_or_none():
+    for page_id, tags in UNTAGGED_SUGGESTIONS.items():
+        if tags is None:
+            continue
+        for tag in tags:
+            assert tag in CANONICAL_TAGS, (
+                f"UNTAGGED_SUGGESTIONS[{page_id!r}] has non-canonical tag {tag!r}"
+            )
+
+
+def test_untagged_suggestions_has_exactly_two_manual_review_cases():
+    manual = [pid for pid, tags in UNTAGGED_SUGGESTIONS.items() if tags is None]
+    assert len(manual) == 2

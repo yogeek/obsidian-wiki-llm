@@ -235,3 +235,22 @@ def canonicalize_tags(old_tags: list[str]) -> tuple[list[str], list[str]]:
             if target not in new_tags:
                 new_tags.append(target)
     return new_tags, unmapped
+
+
+# Suggested tags for the 11 articles that currently have zero tags in
+# Notion, derived from each article's title/URL (see plan Task 4). A
+# value of None means no honest suggestion could be made from the
+# available data — diff.py surfaces these as "needs_manual_review".
+UNTAGGED_SUGGESTIONS: dict[str, list[str] | None] = {
+    "369083fc-7c60-81b9-b010-cdb68da0faeb": ["Kubernetes", "Observabilité"],  # Dozzle - simple container logger
+    "2f2083fc-7c60-815a-98b9-ea57b00252fb": ["Agents-IA"],  # Vibe Kanban - Orchestrate AI Coding Agents
+    "293083fc-7c60-8181-aa27-fd64bcace747": ["Kubernetes", "Ingress-Mesh"],  # K8SGB - a global kubernetes loadbalancer
+    "1a9083fc-7c60-819e-b90d-cbe9121b25c3": ["Kubernetes", "Sécurité"],  # securing-the-kubernetes-host-operating-system
+    "1a2083fc-7c60-8168-bbc3-eaca6aa26ed8": ["Kubernetes", "CICD-GitOps"],  # Testkube as a Quality Gate with Keptn
+    "173083fc-7c60-8135-ab9c-dd25ca007d76": None,  # "A story from Lili Wan on Medium", no URL — insufficient info
+    "133083fc-7c60-8158-adce-f49fbc33fd29": ["Kubernetes", "Observabilité"],  # Kexa - requests limits k8s tool and dashboard
+    "132083fc-7c60-8140-9c06-df9c63585c3b": ["Productivité"],  # Screenity - screen capture tool
+    "bb0480c4-a13f-433c-8f1e-b883bffa6b24": ["Kubernetes"],  # Sleepcycles k8s operator
+    "3222ebac-f2cd-4021-b14b-03650b5e9077": ["CICD-GitOps", "Kubernetes"],  # GitOps bridge
+    "2390efb6-871f-43ab-bf36-e573c3c17e40": None,  # no title, no URL — empty row, insufficient info
+}
