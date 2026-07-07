@@ -1,0 +1,237 @@
+"""
+Canonical tag taxonomy and legacy-tag mapping for the Notion tech-watch
+database curation (see docs/superpowers/specs/2026-07-07-notion-tag-curation-design.md).
+"""
+
+CANONICAL_TAGS = [
+    "Kubernetes", "Ingress-Mesh", "AWS", "Cloud", "IaC", "Terraform",
+    "Crossplane", "CICD-GitOps", "Observabilité", "Sécurité", "Réseau",
+    "IA-LLM", "Agents-IA", "MCP", "CLI-Terminal", "DevEx", "Productivité",
+    "Learning", "SRE-Ops", "FinOps", "Data-DB", "Serverless", "SSH",
+    "Divers",
+]
+
+# Legacy tag name (exact casing as stored in Notion today) -> list of
+# canonical tags it maps to. Every one of the 155 tags currently in the
+# `tag` multi_select property must appear here exactly once as a key.
+TAG_MAP = {
+    # --- Kubernetes ---
+    "K8S": ["Kubernetes"],
+    "docker": ["Kubernetes"],
+    "Karpenter": ["Kubernetes"],
+    "Scaling": ["Kubernetes"],
+    "multitenancy": ["Kubernetes"],
+    "Kind": ["Kubernetes"],
+    "OCI": ["Kubernetes"],
+    "Operator": ["Kubernetes"],
+    "Scheduling": ["Kubernetes"],
+    "Stateful": ["Kubernetes"],
+    "Job": ["Kubernetes"],
+    "fleet": ["Kubernetes"],
+    "Sveltos": ["Kubernetes"],
+    "Microservices": ["Kubernetes"],
+    "registry": ["Kubernetes"],
+    "Kyverno": ["Kubernetes"],
+    "Policies": ["Kubernetes"],
+    "eks": ["Kubernetes", "AWS"],
+
+    # --- Ingress-Mesh ---
+    "Cilium": ["Ingress-Mesh"],
+    "Istio": ["Ingress-Mesh"],
+    "Traefik": ["Ingress-Mesh"],
+    "Nginx": ["Ingress-Mesh"],
+    "GatewayAPI": ["Ingress-Mesh"],
+    "Mesh": ["Ingress-Mesh"],
+    "apigw": ["Ingress-Mesh"],
+
+    # --- AWS ---
+    "aws": ["AWS"],
+    "s3": ["AWS"],
+    "storage": ["AWS"],
+    "IAM": ["AWS", "Sécurité"],
+
+    # --- Cloud ---
+    "cloud": ["Cloud"],
+    "Platform": ["Cloud"],
+    "IDP": ["Cloud"],
+    "Paas": ["Cloud"],
+
+    # --- IaC / Terraform / Crossplane ---
+    "IaC": ["IaC"],
+    "config": ["IaC"],
+    "nix": ["IaC"],
+    "terraform": ["Terraform", "IaC"],
+    "Crossplane": ["Crossplane", "IaC"],
+
+    # --- CICD-GitOps ---
+    "gitops": ["CICD-GitOps"],
+    "CICD": ["CICD-GitOps"],
+    "Git": ["CICD-GitOps"],
+    "Github": ["CICD-GitOps"],
+    "Argocd": ["CICD-GitOps"],
+    "Automation": ["CICD-GitOps"],
+    "Artifact": ["CICD-GitOps"],
+    "Build": ["CICD-GitOps"],
+    "featureflag": ["CICD-GitOps"],
+
+    # --- Observabilité ---
+    "Dashboard": ["Observabilité"],
+    "Observability": ["Observabilité"],
+    "Monitoring": ["Observabilité"],
+    "debug": ["Observabilité"],
+    "log": ["Observabilité"],
+    "Otel": ["Observabilité"],
+    "datadog": ["Observabilité"],
+    "Jaeger": ["Observabilité"],
+
+    # --- Sécurité ---
+    "security": ["Sécurité"],
+    "Auth": ["Sécurité"],
+    "hacking": ["Sécurité"],
+    "secret": ["Sécurité"],
+    "Oauth": ["Sécurité"],
+    "ldap": ["Sécurité"],
+    "oicd": ["Sécurité"],
+    "passkey": ["Sécurité"],
+    "cert": ["Sécurité"],
+    "vault": ["Sécurité"],
+    "RBAC": ["Sécurité", "Kubernetes"],
+
+    # --- Réseau ---
+    "Network": ["Réseau"],
+    "ebpf": ["Réseau"],
+    "grpc": ["Réseau"],
+    "http": ["Réseau"],
+    "Dns": ["Réseau"],
+    "Kernel": ["Réseau"],
+
+    # --- IA-LLM ---
+    "IA": ["IA-LLM"],
+    "GPT": ["IA-LLM"],
+    "LLM": ["IA-LLM"],
+    "AI": ["IA-LLM"],
+    "Prediction": ["IA-LLM"],
+    "Voice": ["IA-LLM"],
+    "STT": ["IA-LLM"],
+    "Speech": ["IA-LLM"],
+    "Claude": ["IA-LLM"],
+    "Notebook": ["IA-LLM"],
+
+    # --- Agents-IA ---
+    "Agent": ["Agents-IA"],
+    "Skills": ["Agents-IA"],
+    "Opencode": ["Agents-IA"],
+
+    # --- MCP ---
+    "MCP": ["MCP"],
+
+    # --- CLI-Terminal ---
+    "CLI": ["CLI-Terminal"],
+    "Terminal": ["CLI-Terminal"],
+    "tui": ["CLI-Terminal"],
+    "Shell": ["CLI-Terminal"],
+    "bash": ["CLI-Terminal"],
+
+    # --- DevEx ---
+    "dev": ["DevEx"],
+    "ide": ["DevEx"],
+    "Ux": ["DevEx"],
+    "ui": ["DevEx"],
+    "Web": ["DevEx"],
+    "Testing": ["DevEx"],
+    "benchmark": ["DevEx"],
+    "Local": ["DevEx"],
+    "Api": ["DevEx"],
+    "Frontend": ["DevEx"],
+    "Framework": ["DevEx"],
+    "Browser": ["DevEx"],
+    "Html": ["DevEx"],
+    "Python": ["DevEx"],
+    "Go": ["DevEx"],
+    "wysiwyg": ["DevEx"],
+    "Package": ["DevEx"],
+    "Cleaning": ["DevEx"],
+    "Image": ["DevEx"],
+    "snippet": ["DevEx"],
+
+    # --- Productivité ---
+    "productivity": ["Productivité"],
+    "Visualisation": ["Productivité"],
+    "Doc": ["Productivité"],
+    "search": ["Productivité"],
+    "n8n": ["Productivité"],
+    "Nocode": ["Productivité"],
+    "map": ["Productivité"],
+    "Diagram": ["Productivité"],
+    "PDF": ["Productivité"],
+    "Poll": ["Productivité"],
+    "Feedback": ["Productivité"],
+
+    # --- Learning ---
+    "learning": ["Learning"],
+    "Formation": ["Learning"],
+    "Nutshell": ["Learning"],
+
+    # --- SRE-Ops ---
+    "ops": ["SRE-Ops"],
+    "sre": ["SRE-Ops"],
+    "Incident": ["SRE-Ops"],
+    "Chaos": ["SRE-Ops"],
+    "HA": ["SRE-Ops"],
+    "Resilience": ["SRE-Ops"],
+    "Cpu": ["SRE-Ops"],
+
+    # --- FinOps ---
+    "costing": ["FinOps"],
+
+    # --- Data-DB ---
+    "data": ["Data-DB"],
+    "db": ["Data-DB"],
+    "Queue": ["Data-DB"],
+    "json": ["Data-DB"],
+    "Sql": ["Data-DB"],
+
+    # --- Serverless ---
+    "Serverless": ["Serverless"],
+    "lambda": ["Serverless", "AWS"],
+    "Knative": ["Serverless", "Kubernetes"],
+    "Wasm": ["Serverless"],
+    "Webassembly": ["Serverless"],
+
+    # --- SSH ---
+    "ssh": ["SSH"],
+
+    # --- Divers ---
+    "opensource": ["Divers"],
+    "Architecture": ["Divers"],
+    "game": ["Divers"],
+    "fun": ["Divers"],
+    "Mac": ["Divers"],
+    "Ios": ["Divers"],
+    "Windows": ["Divers"],
+    "Pro": ["Divers"],
+    "Monolith": ["Divers"],
+    "Blog": ["Divers"],
+    "Uber": ["Divers"],
+}
+
+
+def canonicalize_tags(old_tags: list[str]) -> tuple[list[str], list[str]]:
+    """Map legacy Notion tags to the canonical taxonomy.
+
+    Returns (new_tags, unmapped): new_tags is the order-preserving,
+    deduplicated union of canonical tags for all recognized old_tags.
+    unmapped lists any old_tags not present in TAG_MAP verbatim, so
+    nothing is silently dropped.
+    """
+    new_tags: list[str] = []
+    unmapped: list[str] = []
+    for tag in old_tags:
+        targets = TAG_MAP.get(tag)
+        if targets is None:
+            unmapped.append(tag)
+            continue
+        for target in targets:
+            if target not in new_tags:
+                new_tags.append(target)
+    return new_tags, unmapped
