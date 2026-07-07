@@ -242,12 +242,19 @@ def canonicalize_tags(old_tags: list[str]) -> tuple[list[str], list[str]]:
 # value of None means no honest suggestion could be made from the
 # available data — diff.py surfaces these as "needs_manual_review".
 UNTAGGED_SUGGESTIONS: dict[str, list[str] | None] = {
-    "369083fc-7c60-81b9-b010-cdb68da0faeb": ["Kubernetes", "Observabilité"],  # Dozzle - simple container logger
+    # Note: 3 entries originally in this dict have been removed because the
+    # underlying Notion pages no longer exist as of 2026-07-07:
+    #   - "369083fc-7c60-81b9-b010-cdb68da0faeb" (Dozzle - simple container
+    #     logger): archived as a duplicate of "369083fc-7c60-81b6-..." which
+    #     already carries the correct tags.
+    #   - "1a9083fc-7c60-819e-b90d-cbe9121b25c3" (securing-the-kubernetes-host
+    #     -operating-system, empty title): archived as a duplicate of
+    #     "1a9083fc-7c60-81d2-..." which already carries the correct tags.
+    #   - "173083fc-7c60-8135-ab9c-dd25ca007d76" ("A story from Lili Wan on
+    #     Medium"): deleted directly in Notion by the database owner.
     "2f2083fc-7c60-815a-98b9-ea57b00252fb": ["Agents-IA"],  # Vibe Kanban - Orchestrate AI Coding Agents
     "293083fc-7c60-8181-aa27-fd64bcace747": ["Kubernetes", "Ingress-Mesh"],  # K8SGB - a global kubernetes loadbalancer
-    "1a9083fc-7c60-819e-b90d-cbe9121b25c3": ["Kubernetes", "Sécurité"],  # securing-the-kubernetes-host-operating-system
     "1a2083fc-7c60-8168-bbc3-eaca6aa26ed8": ["Kubernetes", "CICD-GitOps"],  # Testkube as a Quality Gate with Keptn
-    "173083fc-7c60-8135-ab9c-dd25ca007d76": None,  # "A story from Lili Wan on Medium", no URL — insufficient info
     "133083fc-7c60-8158-adce-f49fbc33fd29": ["Kubernetes", "Observabilité"],  # Kexa - requests limits k8s tool and dashboard
     "132083fc-7c60-8140-9c06-df9c63585c3b": ["Productivité"],  # Screenity - screen capture tool
     "bb0480c4-a13f-433c-8f1e-b883bffa6b24": ["Kubernetes"],  # Sleepcycles k8s operator

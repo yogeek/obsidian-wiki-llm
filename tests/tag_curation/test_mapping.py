@@ -98,8 +98,10 @@ def test_empty_input():
 from scripts.tag_curation.mapping import UNTAGGED_SUGGESTIONS
 
 
-def test_untagged_suggestions_has_11_entries():
-    assert len(UNTAGGED_SUGGESTIONS) == 11
+def test_untagged_suggestions_has_8_entries():
+    # Originally 11; 3 removed because the underlying Notion pages no
+    # longer exist (2 archived as duplicates, 1 deleted by the owner).
+    assert len(UNTAGGED_SUGGESTIONS) == 8
 
 
 def test_untagged_suggestions_values_are_canonical_or_none():
@@ -112,6 +114,6 @@ def test_untagged_suggestions_values_are_canonical_or_none():
             )
 
 
-def test_untagged_suggestions_has_exactly_two_manual_review_cases():
+def test_untagged_suggestions_has_exactly_one_manual_review_case():
     manual = [pid for pid, tags in UNTAGGED_SUGGESTIONS.items() if tags is None]
-    assert len(manual) == 2
+    assert len(manual) == 1
