@@ -44,16 +44,30 @@ class NotionConnector(BaseConnector):
         if not self.client:
             return []
         try:
-            response = self.client.databases.query(self.database_id)
             items = []
-            for raw_item in response.get("results", []):
-                try:
-                    item = self._raw_to_source_item(raw_item)
-                    if item:
-                        items.append(item)
-                except Exception as e:
-                    logger.error("Error processing Notion item: %s", e)
-            logger.info("Fetched %d items from Notion", len(items))
+            start_cursor = None
+            pages = 0
+            while True:
+                query_kwargs = {"page_size": 100}
+                if start_cursor:
+                    query_kwargs["start_cursor"] = start_cursor
+                response = self.client.databases.query(
+                    self.database_id, **query_kwargs
+                )
+                pages += 1
+                for raw_item in response.get("results", []):
+                    try:
+                        item = self._raw_to_source_item(raw_item)
+                        if item:
+                            items.append(item)
+                    except Exception as e:
+                        logger.error("Error processing Notion item: %s", e)
+                if not response.get("has_more"):
+                    break
+                start_cursor = response.get("next_cursor")
+            logger.info(
+                "Fetched %d items from Notion (%d API page(s))", len(items), pages
+            )
             return items
         except Exception as e:
             logger.error("Error fetching from Notion database: %s", e)
